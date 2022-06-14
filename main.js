@@ -1,8 +1,9 @@
-var http = require('http');
-var fs = require('fs');
-var url = require('url');
+const http = require('http');
+const fs = require('fs');
+const url = require('url');
+const qs = require('querystring');
 
-const templateHTML = (title, list, description) => {
+const templateHTML = (title, list, body) => {
   return `
   <!doctype html>
   <html>
@@ -13,8 +14,8 @@ const templateHTML = (title, list, description) => {
   <body>
     <h1><a href="/">WEB</a></h1>
     ${list}
-    <h2>${title}</h2>
-    <p>${description}</p>
+    <a href="/create">create</a>
+    ${body}
   </body>
   </html>
   `
@@ -37,17 +38,51 @@ const app = http.createServer((request,response) => {
       fs.readFile(`data/${queryData.id}`, 'utf-8', (err, description= "Hello! Node.js") => {
         fs.readdir("./data/", (err, files) => {
           let title = queryData.id;
-          if(title === undefined){ title = 'Welcome'; }
+          if(title === undefined){ title = 'Welcome!'; }
           let list = templateList(files);
-          const template = templateHTML(title, list, description);
+          const template = templateHTML(title, list, `
+            <h2>${title}</h2> <p>${description}</p>
+          `);
           response.writeHead(200);
           response.end(template);
         });
       });
-    } else{
+    } else if( pathname == '/create'){
+      fs.readdir("./data/", (err, files) => {
+        let title = "WEB - Create";
+        let list = templateList(files);
+        const template = templateHTML(title, list, `
+          <form action= "http://localhost:3000/create_process" method="post">
+            <p><input type="text" name="title" placeholder="title"></p>
+            <p>
+              <textarea name="description" placeholder="description"></textarea>
+            </p>
+            <p>
+              <input type="submit">
+            </p>
+          </form>
+        `);
+        response.writeHead(200);
+        response.end(template);
+      });
+    }else if (pathname == '/create_process'){
+        let body = '';
+        request.on('data', (data) => {
+          body += data;
+          // if (body.lenght > 1e6){request.socket.destroy();};
+        });
+        request.on('end', () => {
+          let post = qs.parse(body);
+          let title = post.title;
+          let description = post.description;
+          console.log(title);
+          console.log(description);
+        });
+        response.writeHead(200);
+        response.end("success");
+    }else{
       response.writeHead(404);
       response.end('Not found');
     }
-
 });
 app.listen(3000);
