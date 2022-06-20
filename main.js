@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const url = require('url');
 const qs = require('querystring');
+const path = require('path');
 const { json } = require('stream/consumers');
 const template = require('./lib/template.js');
 
@@ -11,7 +12,8 @@ const app = http.createServer((request,response) => {
     const pathname = url.parse(_url, true).pathname;
 
     if( pathname === '/'){
-      fs.readFile(`data/${queryData.id}`, 'utf-8', (err, description= "Hello! Node.js") => {
+      let filteredId = path.parse(String(queryData.id)).base;
+      fs.readFile(`data/${filteredId}`, 'utf-8', (err, description= "Hello! Node.js") => {
         fs.readdir("./data/", (err, files) => {
           let title = queryData.id;
           if(title === undefined){ 
@@ -75,7 +77,8 @@ const app = http.createServer((request,response) => {
         });
     }else if (pathname === '/update'){
       fs.readdir("./data/", (err, files) => {
-        fs.readFile(`data/${queryData.id}`, 'utf-8', (err, description) => {
+        let filteredId = path.parse(String(queryData.id)).base;
+        fs.readFile(`data/${filteredId}`, 'utf-8', (err, description) => {
           let title = queryData.id;
           let list = template.list(files);
           const html = template.html(title, list, 
@@ -124,7 +127,8 @@ const app = http.createServer((request,response) => {
         request.on('end', () => {
           let post = qs.parse(body);
           let id = post.id;
-          fs.unlink(`data/${id}`, (err)=>{
+          let filteredId = path.parse(String(id)).base;
+          fs.unlink(`data/${filteredId}`, (err)=>{
             response.writeHead(302, {Location: `/`});
             response.end();
           })
