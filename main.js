@@ -5,6 +5,7 @@ const qs = require('querystring');
 const path = require('path');
 const { json } = require('stream/consumers');
 const template = require('./lib/template.js');
+const sanitizeHtml = require('sanitize-html');
 
 const app = http.createServer((request,response) => {
     const _url = request.url;
@@ -27,12 +28,14 @@ const app = http.createServer((request,response) => {
             response.end(html);
           } else{
             let list = template.list(files);
-            const html = template.html(title, list, 
-              `<h2>${title}</h2> <p>${description}</p>`,
+            let sanitizeTitle = sanitizeHtml(title);
+            let sanitizeDescription = sanitizeHtml(description);
+            const html = template.html(sanitizeTitle, list, 
+              `<h2>${sanitizeTitle}</h2> <p>${sanitizeDescription}</p>`,
               `<a href="/create">create</a> 
-               <a href="/update?id=${title}">update</a>
+               <a href="/update?id=${sanitizeTitle}">update</a>
                <form action="/delete_process" method="post" style="display:inline;">
-                <input type="hidden" name="id" value="${title}">
+                <input type="hidden" name="id" value="${sanitizeTitle}">
                 <input type="submit" value="delete" style="display:inline;background-color:#ffff;border:none;text-decoration:underline;color:#0000EE;cursor:pointer;text-decoration-color:initial;padding:0;font-size:16px;">
                </form>
               `
