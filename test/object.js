@@ -7,3 +7,4 @@ const roles = {
 for(let name in roles){
   console.log('object -> ', name, "value -> ", roles[name]);
 }
+
